@@ -1,10 +1,14 @@
 package com.baeldung.ljs;
 
 import com.baeldung.ljs.domain.model.Task;
+import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class JavaStreamsUnitTest {
     private final Collection<Task> tasks = List.of(
@@ -16,4 +20,45 @@ class JavaStreamsUnitTest {
             new Task("T6", "West Outer Ring street construction", "Construction of West Outer Ring street in Hamburg", LocalDate.of(2035, 5, 18)),
             new Task("T7", "Green river bridge restoration", "Restoration of Green river bridge in Dublin", LocalDate.of(2029, 2, 22)),
             new Task("T8", "Jane's Jacket factory reparation", "Reparation of Jane's Jacket factory", LocalDate.of(2028, 6, 10)));
+
+    @Test
+    void whenMappingStream_thenReturnsAStreamOfTaskCodes() {
+        // Option 1
+//        Stream<Task> taskStream = tasks.stream();
+//        Stream<String> taskCodeStream = taskStream.map(Task::getCode);
+//        List<String> codes = taskCodeStream.toList();
+
+        // Option 2 Cleaner way:
+        List<String> codes = tasks.stream()
+                .map(Task::getCode)
+                .toList();
+
+        List<String> expectedCodes = List.of("T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8");
+        assertTrue(codes.containsAll(expectedCodes));
+    }
+
+    @Test
+    void whenTryingToUseAConsumedStream_thenExceptionIsThrown() {
+        Stream<String> taskCodeStream = tasks.stream()
+                .map(Task::getCode);
+
+        List<String> codes = taskCodeStream.toList();
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> taskCodeStream.forEach(System.out::println)
+        );
+    }
+
+    @Test
+    void whenCollectingAStreamAndStreamingAgain_thenNoExceptionIsThrown() {
+        Stream<String> taskCodeStream = tasks.stream()
+                .map(Task::getCode);
+
+        List<String> codes = taskCodeStream.toList();
+
+        assertDoesNotThrow(() ->
+                codes.stream()
+                        .forEach(System.out::println));
+    }
 }

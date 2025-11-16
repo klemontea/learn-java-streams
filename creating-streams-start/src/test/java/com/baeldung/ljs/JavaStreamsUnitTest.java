@@ -1,10 +1,15 @@
 package com.baeldung.ljs;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import com.baeldung.ljs.domain.model.Task;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class JavaStreamsUnitTest {
 
@@ -20,4 +25,33 @@ class JavaStreamsUnitTest {
     private final Task task9 = new Task("T9", "Museum restoration", "Restoration of the historical museum in Paris", LocalDate.of(2027, 11, 5));
 
     private final Collection<Task> tasks = List.of(task1, task2, task3, task4, task5, task6, task7, task8, task9);
+
+    @Test
+    void whenConvertingTaskCollectionToStream_thenReturnCorrectCount() {
+        Stream<Task> taskStream = tasks.stream();
+        assertEquals(9, taskStream.count());
+    }
+
+    @Test
+    void whenCreatingStreamFromArray_thenReturnCount() {
+        Task[] taskArray = { task1, task2, task3, task4 };
+        Stream<Task> arrayTasksToStream = Arrays.stream(taskArray);
+
+        assertEquals(4, arrayTasksToStream.count());
+    }
+
+    @Test
+    void whenCreatingStreamUsingStreamOf_thenReturnCount() {
+        Stream<Task> taskStream = Stream.of(task5, task6, task7, task8, task9);
+        assertEquals(5, taskStream.count());
+    }
+
+    @Test
+    void whenCreatingAnEmptyStream_thenReturnZero() {
+        Stream<Integer> emptyStream = Stream.empty();
+        Stream<String> emptyStream2 = Stream.of();
+
+        assertEquals(0, emptyStream2.count());
+        assertEquals(0, emptyStream.count());
+    }
 }
