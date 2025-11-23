@@ -1,10 +1,15 @@
 package com.baeldung.ljs;
 
 import com.baeldung.ljs.domain.model.Task;
+import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class JavaStreamsUnitTest {
 
@@ -16,4 +21,53 @@ class JavaStreamsUnitTest {
         new Task("T6", "West Outer Ring street construction", "Construction of West Outer Ring street in Hamburg", LocalDate.of(2035, 5, 18)),
         new Task("T7", "Green river bridge restoration", "Restoration of Green river bridge in Dublin", LocalDate.of(2029, 2, 22)),
         new Task("T8", "Jane's Jacket factory reparation", "Reparation of Jane's Jacket factory", LocalDate.of(2028, 6, 10)));
+
+    @Test
+    void givenTaskStream_whenFilteringTasksWithDueDateAfter2027_thenReturnFilteredList() {
+        List<Task> result = new ArrayList<>();
+        tasks.stream()
+                .filter(task -> task.getDueDate().getYear() > 2027)
+                .forEach(result::add);
+
+        assertEquals(5, result.size());
+    }
+
+    static boolean isDueAfter2027(Task task) {
+        return task.getDueDate().getYear() > 2027;
+    }
+
+    @Test
+    void givenTaskStream_whenFilteringTasksWithMethodReference_thenReturnOneTask() {
+        List<Task> result = new ArrayList<>();
+        tasks.stream()
+                .filter(JavaStreamsUnitTest::isDueAfter2027)
+                .forEach(result::add);
+
+        assertEquals(5, result.size());
+    }
+
+    @Test
+    void givenStream_whenFilteringUsingMoreThanOnePredicate_thenReturnFutureTasks() {
+        Predicate<Task> isConstructionTask = t -> t.getName()
+                .contains("construction");
+
+        List<Task> result = new ArrayList<>();
+        tasks.stream()
+                .filter(isConstructionTask.and(JavaStreamsUnitTest::isDueAfter2027))
+                .forEach(result::add);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void givenTaskStream_whenFilteringWithMultipleConditions_thenReturnFutureTasks() {
+        List<Task> result = new ArrayList<>();
+        tasks.stream()
+                .filter(JavaStreamsUnitTest::isDueAfter2027)
+                // potentially other operations
+                .filter(t -> t.getName().contains("construction"))
+                .forEach(result::add);
+
+        assertEquals(2, result.size());
+    }
 }

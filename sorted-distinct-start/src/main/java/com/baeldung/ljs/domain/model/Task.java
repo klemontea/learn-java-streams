@@ -1,8 +1,9 @@
 package com.baeldung.ljs.domain.model;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
-public class Task {
+public class Task implements Comparable<Task> {
     
     private String code;
 
@@ -56,5 +57,22 @@ public class Task {
     @Override
     public String toString() {
         return "Task [code= " + code + "name=" + name + ", description=" + description + ", dueDate=" + dueDate + "]";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Task other)) return false;
+        return Objects.equals(this.code, other.code);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(code);
+    }
+
+    @Override
+    public int compareTo(Task o) {
+        return this.getDueDate().compareTo(o.getDueDate());
     }
 }
