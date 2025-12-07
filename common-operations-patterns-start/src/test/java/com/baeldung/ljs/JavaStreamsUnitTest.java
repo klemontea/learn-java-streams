@@ -1,10 +1,16 @@
 package com.baeldung.ljs;
 
+import com.baeldung.ljs.domain.model.Campaign;
 import com.baeldung.ljs.domain.model.Task;
 import com.baeldung.ljs.domain.model.TaskStatus;
+import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JavaStreamsUnitTest {
     private final List<Task> tasks = List.of(
@@ -19,4 +25,82 @@ class JavaStreamsUnitTest {
         new Task("D7", "Big Bang restoration", "Restoration of BigBan in London", LocalDate.of(2029, 2, 22), TaskStatus.DONE),
         new Task("T8", "Jane's Jacket factory reparation", "Reparation of Jane's Jacket factory", LocalDate.of(2050, 6, 10), TaskStatus.IN_PROGRESS)
     );
+
+    @Test
+    void whenFilteringMappingAndCollecting_thenReturnsCorrectList() {
+        List<String> inProgressTaskNames = tasks.stream()
+                .filter(task -> task.getStatus() == TaskStatus.IN_PROGRESS)
+                .map(Task::getName)
+                .collect(Collectors.toList());
+
+        assertEquals(4, inProgressTaskNames.size());
+        assertTrue(inProgressTaskNames.contains("John's house construction"));
+        assertTrue(inProgressTaskNames.contains("Jane's Jacket factory reparation"));
+    }
+
+    @Test
+    void whenFilteringMappingAndReduce_thenReturnsConcatenatedCodes() {
+        String codes = tasks.stream()
+                .map(Task::getCode)
+                .filter(code -> code.startsWith("D"))
+                .reduce("", String::concat);
+
+        assertEquals("D2D7", codes);
+    }
+
+    private final Collection<Campaign> campaigns = List.of(
+            new Campaign("Project A", List.of(tasks.getFirst(), tasks.get(1))),
+            new Campaign("Project B", List.of(tasks.get(1), tasks.get(2)))
+    );
+
+    @Test
+    void whenFlatMappingAndFiltering_thenReturnsCorrectTasks() {
+        List<Task> uniqueTasks = campaigns.stream()
+                .flatMap(c -> c.getTasks().stream())
+                .filter(task -> task.getStatus().equals(TaskStatus.ON_HOLD))
+                .distinct()
+                .collect(Collectors.toList());
+
+        assertEquals(1, uniqueTasks.size());
+    }
+
+    @Test
+    void whenGroupingByStatusAndMappingNames_thenReturnsMapOfSets() {
+        Map<TaskStatus, Set<String>> taskNamesByStatus = tasks.stream()
+                .collect(Collectors.groupingBy(Task::getStatus, Collectors.mapping(Task::getName, Collectors.toSet())));
+
+        Set<String> inProgressNames = taskNamesByStatus.get(TaskStatus.IN_PROGRESS);
+
+        assertEquals(3, taskNamesByStatus.size());
+        assertEquals(4, inProgressNames.size());
+    }
+
+    @Test
+    void whenPartitioningByDueDateAndCounting_thenReturnsMapOfCounts() {
+        Map<Boolean, Long> taskCountsByDueDate = tasks.stream()
+                .collect(
+                        Collectors.partitioningBy(task -> task.getDueDate().getYear() > 2024, Collectors.counting())
+                );
+
+        assertEquals(3L, taskCountsByDueDate.get(false));
+        assertEquals(7L, taskCountsByDueDate.get(true));
+    }
+
+    @Test
+    void whenTeeingMinAndMax_thenReturnsCorrectMap() {
+        Map<String, LocalDate> minMaxDueDates = tasks.stream()
+                .collect(Collectors.teeing(
+                        Collectors.minBy(Comparator.comparing(Task::getDueDate)),
+                        Collectors.maxBy(Comparator.comparing(Task::getDueDate)),
+                        (min, max) -> {
+                            Map<String, LocalDate> result = new HashMap<>();
+                            min.ifPresent(task -> result.put("min", task.getDueDate()));
+                            max.ifPresent(task -> result.put("max", task.getDueDate()));
+                            return result;
+                        }
+                ));
+
+        assertEquals(LocalDate.of(2020, 11,15), minMaxDueDates.get("min"));
+        assertEquals(LocalDate.of(2070, 9, 25), minMaxDueDates.get("max"));
+    }
 }

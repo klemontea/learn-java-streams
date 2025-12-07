@@ -2,10 +2,16 @@ package com.baeldung.ljs;
 
 import com.baeldung.ljs.domain.model.Task;
 import com.baeldung.ljs.domain.model.TaskStatus;
+import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JavaStreamsUnitTest {
     private final Collection<Task> tasks = List.of(
@@ -17,4 +23,54 @@ class JavaStreamsUnitTest {
             new Task("T6", "West Outer Ring street construction", "Construction of West Outer Ring street in Hamburg", LocalDate.of(2035, 5, 18), TaskStatus.IN_PROGRESS),
             new Task("T7", "Green river bridge restoration", "Restoration of Green river bridge in Dublin", LocalDate.of(2029, 2, 22), TaskStatus.ON_HOLD),
             new Task("T8", "Jane's Jacket factory reparation", "Reparation of Jane's Jacket factory", LocalDate.of(2028, 6, 10), TaskStatus.IN_PROGRESS));
+
+    @Test
+    void whenCountingAllTasks_thenReturnsCorrectCount() {
+        long taskCount = tasks.stream().count();
+
+        assertEquals(8L, taskCount);
+    }
+
+    @Test
+    void whenCountingDoneTasks_thenReturnsCorrectCount() {
+        long doneTaskCount = tasks.stream()
+                .filter(task -> task.getStatus() == TaskStatus.DONE)
+                .count();
+
+        assertEquals(2L, doneTaskCount);
+    }
+
+    @Test
+    void whenFindingDoneTaskWithLatestDueDate_thenReturnsCorrectTask() {
+        Optional<Task> latestDone = tasks.stream()
+                .filter(t -> t.getStatus() == TaskStatus.DONE)
+                .max(Comparator.comparing(Task::getDueDate));
+
+        assertTrue(latestDone.isPresent());
+        assertEquals("T4", latestDone.get().getCode());
+    }
+
+    @Test
+    void whenFindingInProgressTaskWithEarliestDueDate_thenReturnsCorrectTask() {
+        Optional<Task> earliestInProgress = tasks.stream()
+                .filter(t -> t.getStatus() == TaskStatus.IN_PROGRESS)
+                .min(Comparator.comparing(Task::getDueDate));
+
+        assertTrue(earliestInProgress.isPresent());
+        assertEquals("T1", earliestInProgress.get().getCode());
+    }
+
+    @Test
+    void whenImplementingComparable_thenUseNaturalOrderingWithMin() {
+        Optional<Task> earliestTask = tasks.stream().min(Comparator.naturalOrder());
+        assertTrue(earliestTask.isPresent());
+        assertEquals("T1", earliestTask.get().getCode());
+    }
+
+    @Test
+    void whenImplementingComparable_thenUseNaturalOrderingWithMax() {
+        Optional<Task> latestTask = tasks.stream().max(Comparator.naturalOrder());
+        assertTrue(latestTask.isPresent());
+        assertEquals("T6", latestTask.get().getCode());
+    }
 }
